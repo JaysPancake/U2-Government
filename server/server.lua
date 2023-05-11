@@ -3,9 +3,9 @@ local QBCore = exports['qb-core']:GetCoreObject() -- Import QB Core
 RegisterServerEvent('taxes:pay')
 AddEventHandler('taxes:pay', function()
     local playerId = source
-    local u2Player = QBCore.Functions.GetPlayer(playerId)
-    local salary = u2Player.PlayerData.job.salary
-    local jobName = u2Player.PlayerData.job.name
+    local u2Player = QBCore.Functions.GetPlayerData()
+    local salary = u2Player.job.payment
+    local jobName = u2Player.job.name
     
     -- retrieve the tax percentage from the job table in the database
     local taxPercent = 0.1 -- default value
