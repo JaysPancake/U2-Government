@@ -25,3 +25,8 @@ AddEventHandler('taxes:pay', function()
     
     TriggerClientEvent('QBCore:Notify', playerId, "You received your paycheck, $" .. salary - amountToRemove .. " was deposited into your bank account. $" .. amountToRemove .. " was paid in taxes.") -- notify the player about their paycheck and the taxes paid
 end)
+
+RegisterCommand("paytaxes", function(source, args)
+    TriggerEvent("taxes:pay")
+    TriggerClientEvent('chat:addMessage', source, { args = {"^1[Tax System]", "^2Taxes have been paid."} })
+end, false)
