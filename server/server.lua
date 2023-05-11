@@ -20,7 +20,7 @@ AddEventHandler('taxes:pay', function()
     u2Player.removeBankMoney(amountToRemove, "Paid salary") -- use the qb-core function to remove money from player's bank account
     
     -- add the deducted amount to the society fund called "government"
-    local society = QBCore.Functions.GetSociety("government")
+    local society = exports['qb-management']:GetAccount(Player.PlayerData.job.name)
     society.addMoney(amountToRemove)
     
     TriggerClientEvent('QBCore:Notify', playerId, "You received your paycheck, $" .. salary - amountToRemove .. " was deposited into your bank account. $" .. amountToRemove .. " was paid in taxes.") -- notify the player about their paycheck and the taxes paid
@@ -30,3 +30,11 @@ RegisterCommand("paytaxes", function(source, args)
     TriggerEvent("taxes:pay")
     TriggerClientEvent('chat:addMessage', source, { args = {"^1[Tax System]", "^2Taxes have been paid."} })
 end, false)
+
+RegisterCommand('testgetgangaccount', function(source)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then return end
+    local gang = Player.PlayerData.gang.name
+    local society = exports['qb-management']:GetGangAccount(gang)
+    print(society) -- if society exists prints balance else prints 0
+end)
