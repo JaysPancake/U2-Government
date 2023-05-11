@@ -1,11 +1,11 @@
-use 'CHANGE-ME';
+use `CHANGE-ME`;
 
 CREATE TABLE IF NOT EXISTS `job_tax` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `job_name` varchar(50) NOT NULL,
   `tax_percent` decimal(5,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 INSERT INTO `job_tax` (`job_name`, `tax_percent`) VALUES
 ('unemployed', 0.00),
