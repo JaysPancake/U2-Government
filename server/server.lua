@@ -1,40 +1,55 @@
-local QBCore = exports['qb-core']:GetCoreObject() -- Import QB Core
+-- Assuming QBCore is already initialized
+local QBCore = exports['qb-core']:GetCoreObject()
 
-RegisterServerEvent('taxes:pay')
-AddEventHandler('taxes:pay', function()
-    local playerId = source
-    local u2Player = QBCore.Functions.GetPlayerData()
-    local salary = u2Player.job.payment
-    local jobName = u2Player.job.name
-    
-    -- retrieve the tax percentage from the job table in the database
-    local taxPercent = 0.1 -- default value
-    QBCore.Functions.ExecuteSql('SELECT tax_percent FROM job_tax WHERE job_name = ?', {jobName}, function(result)
-        if result[1] ~= nil and result[1].tax_percent ~= nil then
-            taxPercent = result[1].tax_percent
+-- Function to deduct a percentage of paycheck based on job type
+function DeductPercentageFromPaycheck(source)
+    local xPlayer = QBCore.Functions.GetPlayer(source)
+    if xPlayer then
+        local job = xPlayer.PlayerData.job
+        local paycheck = xPlayer.PlayerData.money['bank']
+        local deductionPercentage = GetDeductionPercentage(job)
+        local deductionAmount = paycheck * (deductionPercentage / 100)
+
+        -- Deduct the amount from player's paycheck
+        xPlayer.Functions.RemoveMoney('bank', deductionAmount)
+
+        -- Add the deducted amount to government account
+        -- Assuming there's a function to add money to government account
+        AddMoneyToGovernmentAccount(deductionAmount)
+
+        print("[INFO] Deducted "..deductionAmount.." from "..xPlayer.PlayerData.name.."'s paycheck.")
+    else
+        print("[ERROR] Player not found.")
+    end
+end
+
+-- Function to get deduction percentage based on job type
+function GetDeductionPercentage(job)
+    local percentage = 0
+
+    -- Fetch the deduction percentage from the database
+    MySQL.Async.fetchScalar('SELECT deductionPercentage FROM jobPercentages WHERE jobType = @jobType', {
+        ['@jobType'] = job
+    }, function(deductionPercentage)
+        if deductionPercentage then
+            percentage = deductionPercentage
+        else
+            print("[ERROR] Deduction percentage not found for job type: "..job)
         end
     end)
-    
-    local amountToRemove = math.floor(salary * taxPercent)
-    
-    u2Player.removeBankMoney(amountToRemove, "Paid salary") -- use the qb-core function to remove money from player's bank account
-    
-    -- add the deducted amount to the society fund called "government"
-    local society = exports['qb-management']:GetAccount(Player.PlayerData.job.name)
-    society.addMoney(amountToRemove)
-    
-    TriggerClientEvent('QBCore:Notify', playerId, "You received your paycheck, $" .. salary - amountToRemove .. " was deposited into your bank account. $" .. amountToRemove .. " was paid in taxes.") -- notify the player about their paycheck and the taxes paid
-end)
 
-RegisterCommand("paytaxes", function(source, args)
-    TriggerEvent("taxes:pay")
-    TriggerClientEvent('chat:addMessage', source, { args = {"^1[Tax System]", "^2Taxes have been paid."} })
-end, false)
+    return percentage
+end
 
-RegisterCommand('testgetgangaccount', function(source)
-    local Player = QBCore.Functions.GetPlayer(source)
-    if not Player then return end
-    local gang = Player.PlayerData.gang.name
-    local society = exports['qb-management']:GetGangAccount(gang)
-    print(society) -- if society exists prints balance else prints 0
+-- Function to add money to government account
+function AddMoneyToGovernmentAccount(amount)
+    -- Add your logic here to add money to government account
+    -- This might involve calling a function from qb-management
+    print("[INFO] Added "..amount.." to government account.")
+end
+
+-- Register the event that triggers every time a player receives their paycheck
+RegisterNetEvent('qb-paycheck:server:givePaycheck', function()
+    local source = source
+    DeductPercentageFromPaycheck(source)
 end)
